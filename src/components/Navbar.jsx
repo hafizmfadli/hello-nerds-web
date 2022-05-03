@@ -133,6 +133,7 @@ const Navbar = () => {
   return (
     <AppBar position="static">
       <Toolbar>
+        {/* Logo */}
         <Typography
           variant="h6"
           noWrap
@@ -141,6 +142,7 @@ const Navbar = () => {
         >
           HELLO NERDS
         </Typography>
+        {/* Search Box */}
         <Search
           sx={{
             display: { xs: isSearchBtnClicked ? "block" : "none", md: "block" },
@@ -201,6 +203,7 @@ const Navbar = () => {
           )}
         </Search>
         <Box sx={{ flexGrow: 1 }} />
+        {/* account and shopping cart button */}
         <Box sx={{ display: { xs: isSearchBtnClicked ? "none" : "flex" } }}>
           <IconButton
             size="large"
