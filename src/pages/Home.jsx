@@ -10,13 +10,13 @@ const CarouselProductsContainer = styled.div`
 
 const Home = () => {
   return (
-    <div>
+    <React.Fragment>
       <Navbar />
       <Slider />
       <CarouselProductsContainer>
         <CarouselProducts title="New Arrival"/>
       </CarouselProductsContainer>
-    </div>
+    </React.Fragment>
   );
 };
 
