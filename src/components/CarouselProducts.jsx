@@ -1,7 +1,7 @@
 import React from "react";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
-import CarouselProductItem from "./CarouselProductItem";
+import ProductItem from "./ProductItem";
 import { Container } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import {carouselProducts} from "../data";
@@ -33,7 +33,8 @@ const CarouselProducts = ({ title }) => {
         <h2>{title}</h2>
         <Carousel responsive={responsive}>
           {carouselProducts.map((item, i) => (
-            <CarouselProductItem
+            <ProductItem
+              key={item.id}
               productId={item.id}
               imgUrl={item.imgUrl}
               productTitle={item.title}
@@ -41,34 +42,6 @@ const CarouselProducts = ({ title }) => {
               price={item.price}
             />
           ))}
-          {/* <CarouselProductItem
-            productId={1}
-            imgUrl="https://static.periplus.com/nPjyff5ADpJIFw3k1SUY3rk6LAHWjBIIBJOxcucKiAdbZiUA6HeufCI9VBSEevJAw--"
-            productTitle="Javascript, PHP"
-            price={50000}
-            author={"Hafiz, Fadli"}
-          />
-          <CarouselProductItem
-            productId={2}
-            imgUrl="https://static.periplus.com/nPjyff5ADpJIFw3k1SUY3rk6LAHWjBIIBJOxcucKiAdbZiUA6HeufCI9VBSEevJAw--"
-            productTitle="Javascript, PHP"
-            price={50000}
-            author={"Hafiz, Fadli"}
-          />
-          <CarouselProductItem
-            productId={3}
-            imgUrl="https://static.periplus.com/nPjyff5ADpJIFw3k1SUY3rk6LAHWjBIIBJOxcucKiAdbZiUA6HeufCI9VBSEevJAw--"
-            productTitle="Javascript, PHP"
-            price={50000}
-            author={"Hafiz, Fadli"}
-          />
-          <CarouselProductItem
-            productId={4}
-            imgUrl="https://static.periplus.com/nPjyff5ADpJIFw3k1SUY3rk6LAHWjBIIBJOxcucKiAdbZiUA6HeufCI9VBSEevJAw--"
-            productTitle="Javascript, PHP"
-            price={50000}
-            author={"Hafiz, Fadli"}
-          /> */}
         </Carousel>
       </Paper>
     </Container>
