@@ -17,6 +17,8 @@ import Paper from "@mui/material/Paper";
 import MenuList from "@mui/material/MenuList";
 import axios from "axios";
 import { debounce } from "lodash";
+import { API_BASE_URL } from "../helpers";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -57,11 +59,12 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-const Navbar = () => {
+const Navbar = ({ onFilterChanges }) => {
   const [isSearchBtnClicked, setIsSearchBtnClicked] = useState(false);
   const [searchResults, setSearchResult] = useState([]);
   const searchInputRef = useRef();
-  const BASE_URL = process.env.REACT_APP_HELLO_NERDS_API_BASE_URL
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     // set focus to search box when user clicked
@@ -70,6 +73,12 @@ const Navbar = () => {
       searchInputRef.current.focus();
     }
   }, [isSearchBtnClicked]);
+
+  useEffect(() => {
+    // make sure searchbox value is sync with query param
+    // bisa pake redux untuk sync anatar query param, navbar searchbox, dan keyword di advance filter
+    searchInputRef.current.value = searchParams.get("searchword") || "";
+  }, []);
 
   // fire when magnifier button (only show when screen size < md) clicked
   const handleShowSearchInput = () => {
@@ -97,7 +106,7 @@ const Navbar = () => {
     if (!query) return setSearchResult([]);
     try {
       const response = await axios.get(
-        `${BASE_URL}/v1/books/suggest?typesearch=${query}`
+        `${API_BASE_URL}/v1/books/suggest?typesearch=${query}`
       );
       setSearchResult(response.data.suggestions);
     } catch (error) {
@@ -118,16 +127,33 @@ const Navbar = () => {
   );
 
   // fired when user selected one of the provided suggestion
-  const handleSelectSearchSuggestion = (selectedTitle) => {
+  const handleSelectSearchSuggestion = async (selectedTitle) => {
     // set search box value to correspond suggestion's title
     searchInputRef.current.value = selectedTitle;
 
     // hide all suggestion
     setSearchResult([]);
 
-    // TODO : make API call to search book with title selectedTitle
-    //        and route to search result page
+    // navigate to search result page
+    navigate(`/product/search?searchword=${selectedTitle}`);
 
+    // update all filter state so SearchResult page can be triggered to make API call
+    onFilterChanges(selectedTitle, "", "", "", "");
+  };
+
+  // fired when user press enter
+  const handleEnterInput = (e) => {
+    if (e.key === "Enter") {
+      // hide all suggestion
+      setSearchResult([]);
+
+      // navigate to search result page
+      let searchword = e.target.value;
+      navigate(`/product/search?searchword=${searchword}`);
+      
+      // update all filter state so SearchResult page can be triggered to make API call
+      onFilterChanges(searchword, "", "", "", "");
+    }
   };
 
   return (
@@ -157,6 +183,7 @@ const Navbar = () => {
             onBlur={handleSearchBlurred}
             inputRef={searchInputRef}
             onChange={debouncedHandleInputChange}
+            onKeyDown={handleEnterInput}
           />
 
           {/* Suggestion panel */}
