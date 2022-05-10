@@ -59,3 +59,87 @@ export const carouselProducts = [
     price: 150000
   }
 ]
+
+// cart data
+export const productsDummy = [
+  {
+    id: 1,
+    imgUrl: '/assets/no-image.jpeg',
+    title: 'How to make money just in the bedroom',
+    identifier: '987654321121',
+    author: 'Hafiz, Fadli',
+    price: 50000,
+    stock: 2,
+    totalAddedToCart: 1
+  },
+  {
+    id: 2,
+    imgUrl: '/assets/no-image.jpeg',
+    title: 'Elasticsearch definitive guide',
+    author: 'Hafiz, Fadli',
+    identifier: '987654321122',
+    price: 150000,
+    stock: 1,
+    totalAddedToCart: 1
+  },
+  {
+    id: 3,
+    imgUrl: '/assets/no-image.jpeg',
+    title: 'Mongo, Express, React, and Node (MERN) Stack',
+    author: 'Hafiz, Fadli',
+    identifier: '987654321123',
+    price: 150000,
+    stock: 4,
+    totalAddedToCart: 1
+  },
+  {
+    id: 4,
+    imgUrl: '/assets/no-image.jpeg',
+    title: 'Apache Kafka and Debezium',
+    author: 'Hafiz, Fadli',
+    identifier: '987654321124',
+    price: 150000,
+    stock: 2,
+    totalAddedToCart: 1
+  },
+  {
+    id: 5,
+    imgUrl: '/assets/no-image.jpeg',
+    title: 'How Linux Works',
+    author: 'Hafiz, Fadli',
+    identifier: '987654321125',
+    price: 150000,
+    stock: 1,
+    totalAddedToCart: 1
+  }
+]
+
+// expected data structure for cart pages
+export const cartsDummy = [
+  {
+    userId: 1,
+    product: {
+      id: 5,
+      imgUrl: '/assets/no-image.jpeg',
+      title: 'How Linux Works',
+      author: 'Hafiz, Fadli',
+      identifier: '987654321125',
+      price: 100000,
+      stock: 5
+    },
+    quantity: 3
+  },
+  {
+    userId: 2,
+    product: {
+      id: 6,
+      imgUrl: '/assets/no-image.jpeg',
+      title: 'Apache Kafka and Debezium',
+      author: 'Hafiz, Fadli',
+      identifier: '987654321124',
+      price: 150000,
+      stock: 3
+    },
+    quantity: 1
+  }
+]

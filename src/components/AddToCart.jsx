@@ -3,11 +3,10 @@ import { useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import SendIcon from "@mui/icons-material/Send";
-import { stubFalse } from "lodash";
 
 const AddToCart = ({ max }) => {
   const [quantity, setQuantity] = useState(1);
-  const [isMax, setIsMax] = useState(stubFalse);
+  const [isMax, setIsMax] = useState(false);
 
   // fire when user add quantity that will be place in the cart
   const handleAddQuantity = () => {
@@ -54,7 +53,7 @@ const AddToCart = ({ max }) => {
           variant="outlined"
           onClick={() =>
             setQuantity((prevState) =>
-              prevState > 0 ? prevState - 1 : prevState
+              prevState > 1 ? prevState - 1 : prevState
             )
           }
         >
