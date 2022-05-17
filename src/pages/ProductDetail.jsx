@@ -117,7 +117,8 @@ const ProductDetail = () => {
           </Box>
         </Box>
         {/* Add to cart */}
-        <AddToCart max={book.quantity} />
+        {/* <AddToCart max={book.quantity} /> */}
+        <AddToCart book={book} />
       </Box>
     );
   }
