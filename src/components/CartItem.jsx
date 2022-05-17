@@ -15,9 +15,9 @@ const CartItem = ({ item, onIncrementItemQty, onDecrementItemQty, onRemove }) =>
         height="120"
       />
       <Box>
-        <Typography varian="h6">{item.product.title}</Typography>
-        <Typography varian="h6">{item.product.identifier}</Typography>
-        <Typography varian="h6">Rp {item.product.price}</Typography>
+        <Typography varian="h6">{item.book.title}</Typography>
+        <Typography varian="h6">{item.book.identifier}</Typography>
+        <Typography varian="h6">Rp {item.book.price}</Typography>
         <ButtonQty
           cartItem={item}
           onIncrementQty={onIncrementItemQty}

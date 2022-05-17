@@ -6,7 +6,7 @@ import Grid from "@mui/material/Grid";
 const ButtonQty = ({ cartItem, onIncrementQty, onDecrementQty }) => {
   // fire when user add quantity that will be place in the cart
   const handleIncrementQuantity = () => {
-    if (cartItem.product.stock > cartItem.quantity) {
+    if (cartItem.book.stock > cartItem.quantity) {
       onIncrementQty();
     }
   };
@@ -36,8 +36,8 @@ const ButtonQty = ({ cartItem, onIncrementQty, onDecrementQty }) => {
         </Grid>
       </Grid>
       <Box sx={{ color: "red", marginTop: "10px" }}>
-        {cartItem.product.stock === cartItem.quantity && (
-          <p>Available stock is {cartItem.product.stock}</p>
+        {cartItem.book.stock === cartItem.quantity && (
+          <p>Available stock is {cartItem.book.stock}</p>
         )}
       </Box>
     </Box>
