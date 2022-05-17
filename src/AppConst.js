@@ -1,0 +1,2 @@
+export const LOCAL_STORAGE_AUTH_KEY="hello_nerds_user"
+export const LOCAL_STORAGE_CART_KEY="hello_nerds_cart"

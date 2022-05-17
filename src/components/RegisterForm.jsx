@@ -2,6 +2,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import Box from "@mui/material/Box";
 import { Link } from "react-router-dom";
+import AuthService from "../services/auth.service";
 
 const RegisterForm = ({ loginFormUrl }) => {
   const {
@@ -14,6 +15,13 @@ const RegisterForm = ({ loginFormUrl }) => {
   const onSubmit = (data) => {
     // make HTTP request to register API endpoint
     console.log(data);
+    AuthService.register(
+      data.email,
+      data.firstName,
+      data.lastName,
+      data.password,
+      data.passwordConfirmation
+    );
   };
 
   return (

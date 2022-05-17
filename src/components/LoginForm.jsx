@@ -2,6 +2,9 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import Box from "@mui/material/Box";
 import { Link } from "react-router-dom";
+import AuthService from '../services/auth.service'
+import { useNavigate } from "react-router-dom";
+
 
 const LoginForm = ({ registerFormUrl }) => {
   const {
@@ -10,9 +13,13 @@ const LoginForm = ({ registerFormUrl }) => {
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
+  const navigate = useNavigate();
+
+
+  const onSubmit = async (data) => {
     // make HTTP request to login API endpoint
-    console.log(data);
+    let x = await AuthService.login(data.email, data.password)
+    console.log('X :', x)
   };
 
   return (

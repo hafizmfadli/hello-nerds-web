@@ -19,6 +19,10 @@ import axios from "axios";
 import { debounce } from "lodash";
 import { API_BASE_URL } from "../helpers";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSelector } from 'react-redux'
+import { selectCart, sumCartQuantity } from '../slices/cartSlice'
+import cartService from '../services/cart'
+
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -65,6 +69,7 @@ const Navbar = ({ onFilterChanges }) => {
   const searchInputRef = useRef();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const cartQty = useSelector(sumCartQuantity)
 
   useEffect(() => {
     // set focus to search box when user clicked
@@ -156,6 +161,11 @@ const Navbar = ({ onFilterChanges }) => {
     }
   };
 
+  // fired when cart button is clicked
+  const handleCartClicked = (e) => {
+    navigate(`/checkout/cart`);
+  }
+
   return (
     <AppBar position="static">
       <Toolbar>
@@ -240,8 +250,8 @@ const Navbar = ({ onFilterChanges }) => {
           >
             <SearchIcon />
           </IconButton>
-          <IconButton size="large" color="inherit">
-            <Badge badgeContent={1} color="error">
+          <IconButton size="large" color="inherit" onClick={handleCartClicked}>
+            <Badge badgeContent={cartQty} color="error">
               <ShoppingCartIcon />
             </Badge>
           </IconButton>
