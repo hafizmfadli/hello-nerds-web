@@ -9,6 +9,7 @@ import Cart from "./pages/Cart";
 import Register from "./pages/Register";
 import { Provider } from "react-redux";
 import store from "./store";
+import MemberOrGuest from "./pages/MemberOrGuest";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
@@ -21,6 +22,7 @@ root.render(
         <Route path="product/search" element={<SearchResult />} />
         <Route path="p/:bookId/:title" element={<ProductDetail />} />
         <Route path="checkout/cart" element={<Cart />} />
+        <Route path="checkout/guest_shipping_address" element={<MemberOrGuest />} />
       </Routes>
     </BrowserRouter>
   </Provider>
