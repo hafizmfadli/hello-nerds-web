@@ -143,3 +143,76 @@ export const cartsDummy = [
     quantity: 1
   }
 ]
+
+// expected province data
+export const provinceDummy = [
+  {
+    id: 1,
+    name: 'Jawa Barat'
+  },
+  {
+    id: 2,
+    name: 'Jawa Tengah'
+  }
+]
+
+// expected city data
+export const citiesDummy = [
+  {
+    id: 1,
+    name: 'Bandung',
+    prov_id: 1
+  },
+  {
+    id: 2,
+    name: 'Semarang',
+    prov_id: 2
+  }
+]
+
+// expected district data
+export const districtsDummy = [
+  {
+    id: 1,
+    name: 'Babakan Ciparay',
+    city_id: 1
+  },
+  {
+    id: 2,
+    name: 'Banyumanik',
+    city_id: 2
+  }
+]
+
+// expected subdistrict data
+export const subdistrictsDummy = [
+  {
+    id: 1,
+    name: 'Babakan Ciparay',
+    district_id: 1
+  },
+  {
+    id: 2,
+    name: 'Srondol Wetan',
+    district_id: 2
+  }
+]
+
+export const postalcodeDummy = [
+  {
+    id: 1,
+    prov_id: 1,
+    city_id: 1,
+    district_id: 1,
+    subdistrict_id :1,
+    postal_code: '40223'
+  },
+  {
+    id: 2,
+    prov_id: 2,
+    city_id: 2,
+    district_id: 2,
+    subdistrict_id: 2,
+    postal_code: '50263'
+  }
+]
