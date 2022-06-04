@@ -4,11 +4,14 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import SendIcon from "@mui/icons-material/Send";
 import CartService from "../services/cart";
-import { bookAdded } from "../slices/cartSlice";
+import { bookAdded, cartSetup } from "../slices/cartSlice";
 import { useDispatch } from "react-redux";
 import authService from "../services/auth.service";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import MaxCartItemError from "../errors/MaxCartItemError";
+import axios from "axios";
+const API_URL = process.env.REACT_APP_HELLO_NERDS_API_BASE_URL + "/v1";
 
 const AddToCart = ({ book }) => {
   const [quantity, setQuantity] = useState(1);
@@ -27,13 +30,35 @@ const AddToCart = ({ book }) => {
     });
   };
 
-  const handleAddToCart = () => {
-    console.log(book);
+  const handleAddToCart = async () => {
 
-    // check is user logged in or not
+    // check whether user is logged in or not
     if (authService.isLoggedIn()) {
       // user already have logged in
-      // perform async add to cart
+      const user = authService.isLoggedIn().user_info;
+      const token = authService.isLoggedIn().authentication_token.token;
+
+      try {
+        const cart = await CartService.updateCartAsync(
+          token,
+          book,
+          quantity,
+          user.id
+        );
+        dispatch(cartSetup(cart));
+        MySwal.fire({
+          icon: "success",
+          title: "Nice choice...",
+          text: "This book is successfully added to your cart",
+        });
+      } catch (err) {
+        MySwal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: err.message,
+        });
+      }
+
     } else {
       // guest user
       if (CartService.Add(book, quantity)) {
@@ -49,7 +74,7 @@ const AddToCart = ({ book }) => {
         MySwal.fire({
           icon: "error",
           title: "Oops...",
-          text: "You can't add more quantity because your purchase quantity for this book has been reach or exceed available stock",
+          text: new MaxCartItemError().message,
         });
       }
     }
