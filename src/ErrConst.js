@@ -1,0 +1,1 @@
+export const ERR_MAX_PURCHASE="ERR_MAX_PURCHASE"

@@ -4,19 +4,26 @@ import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import CartItem from "./CartItem";
 import Grid from "@mui/material/Grid";
-import { cartsDummy } from "../data";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import AuthService from "../services/auth.service";
 import CartService from "../services/cart";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCart, bookRemoved, bookSetQty } from "../slices/cartSlice";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+import { useNavigate } from "react-router-dom";
+
+const API_URL = process.env.REACT_APP_HELLO_NERDS_API_BASE_URL + "/v1";
 
 const CartItemList = () => {
   let cart = useSelector(selectCart);
-  const [cartItems, setCartItems] = useState(cart);
-  const [isFirstRender, setIsFirstRender] = useState(true);
+  const [cartItems, setCartItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const dispatch = useDispatch();
+  const MySwal = withReactContent(Swal);
+  const navigate = useNavigate();
+  const [isFetchError, setIsFetchError] = useState(false);
 
   useEffect(() => {
     // cartItems source is from API or browser's local storage
@@ -24,24 +31,78 @@ const CartItemList = () => {
     // otherwise from browser's local storage
     if (AuthService.isLoggedIn()) {
       //  send HTTP request to API cart
+      const fetchCartData = async () => {
+        const user = AuthService.isLoggedIn().user_info;
+        const token = AuthService.isLoggedIn().authentication_token.token;
+        try {
+          const cartData = await CartService.fetch(token, user.id);
+          setCartItems(cartData);
+          setIsFetchError(false);
+        } catch (err) {
+          MySwal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: err.message,
+          });
+          setIsFetchError(true);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchCartData();
+    } else {
+      // if user haven't logged in yet, the use redux state as data source
+      setCartItems(cart);
+      setIsLoading(false);
     }
-    setIsFirstRender(false);
   }, []);
 
   // fired when decrement button quantity clicked
-  const handleDecrement = (cartItem) => {
+  const handleDecrement = async (cartItem) => {
     // we can't decrement anymore when we only have one quantity for particular product in our cart
     if (cartItem.quantity > 1) {
       // todo: make helpers function to make deep copy array of objects
       let updatedCartItem = { ...cartItem, quantity: cartItem.quantity - 1 };
       let updatedCartItems = [];
-      cartItems.forEach((item) => {
-        if (item.book.id === cartItem.book.id) {
-          updatedCartItems.push(updatedCartItem);
-        } else {
-          updatedCartItems.push({ ...item });
+
+      if (AuthService.isLoggedIn()) {
+        const user = AuthService.isLoggedIn().user_info;
+        const token = AuthService.isLoggedIn().authentication_token.token;
+        try {
+          // todo : set dialog loading
+          await CartService.SetNewQuantityAsync(
+            token,
+            cartItem.book,
+            cartItem.quantity - 1,
+            user.id
+          );
+
+          const cartResponseData = await CartService.fetch(token, user.id);
+          setCartItems(cartResponseData);
+          updatedCartItems.splice(
+            0,
+            updatedCartItems.length,
+            ...cartResponseData
+          );
+        } catch (err) {
+          MySwal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: err.message,
+          });
+        } finally {
+          // todo : disable dialog loading
         }
-      });
+      } else {
+        cartItems.forEach((item) => {
+          if (item.book.id === cartItem.book.id) {
+            updatedCartItems.push(updatedCartItem);
+          } else {
+            updatedCartItems.push({ ...item });
+          }
+        });
+      }
+
       setCartItems(updatedCartItems);
 
       // dispatch action to redux store
@@ -50,19 +111,52 @@ const CartItemList = () => {
   };
 
   // fired when increment button quantity clicked
-  const handleIncrement = (cartItem) => {
+  const handleIncrement = async (cartItem) => {
+    // Guest user.
     // we only can added more product quantity to our cart when product stock is sufficient
     if (cartItem.book.stock > cartItem.quantity) {
-      // todo: make helpers function to make deep copy array of objects
-      let updatedCartItem = { ...cartItem, quantity: cartItem.quantity + 1 };
       let updatedCartItems = [];
-      cartItems.forEach((item) => {
-        if (item.book.id === cartItem.book.id) {
-          updatedCartItems.push(updatedCartItem);
-        } else {
-          updatedCartItems.push({ ...item });
+      let updatedCartItem = { ...cartItem, quantity: cartItem.quantity + 1 };
+
+      if (AuthService.isLoggedIn()) {
+        const user = AuthService.isLoggedIn().user_info;
+        const token = AuthService.isLoggedIn().authentication_token.token;
+        try {
+          // todo : set dialog loading
+          await CartService.SetNewQuantityAsync(
+            token,
+            cartItem.book,
+            cartItem.quantity + 1,
+            user.id
+          );
+
+          const cartResponseData = await CartService.fetch(token, user.id);
+          setCartItems(cartResponseData);
+          updatedCartItems.splice(
+            0,
+            updatedCartItems.length,
+            ...cartResponseData
+          );
+        } catch (err) {
+          MySwal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: err.message,
+          });
+        } finally {
+          // todo : disable dialog loading
         }
-      });
+      } else {
+        // todo: make helpers function to make deep copy array of objects
+        cartItems.forEach((item) => {
+          if (item.book.id === cartItem.book.id) {
+            updatedCartItems.push(updatedCartItem);
+          } else {
+            updatedCartItems.push({ ...item });
+          }
+        });
+      }
+
       setCartItems(updatedCartItems);
 
       // dispatch action to redux store
@@ -71,10 +165,31 @@ const CartItemList = () => {
   };
 
   // fired when remove button for particular product clicked
-  const handleRemoveCartItems = (cartItem) => {
+  const handleRemoveCartItems = async (cartItem) => {
     // TODO: make API call to remove particular cartItem (only for user that has been logged into the system)
+    let updatedCartItems = [];
     if (AuthService.isLoggedIn()) {
       // Send HTTP request to remove particular item from the cart
+      const user = AuthService.isLoggedIn().user_info;
+      const token = AuthService.isLoggedIn().authentication_token.token;
+
+      try {
+        await CartService.removeCartAsync(user.id, token, cartItem.book.id);
+
+        const cartResponseData = await CartService.fetch(token, user.id);
+        setCartItems(cartResponseData);
+        updatedCartItems.splice(
+          0,
+          updatedCartItems.length,
+          ...cartResponseData
+        );
+      } catch (err) {
+        MySwal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: err.message,
+        });
+      }
     }
     // remove particular item from local storage cart data
     CartService.removeItem(cartItem.book.id);
@@ -94,9 +209,7 @@ const CartItemList = () => {
 
   // fired when checkout button clicked
   const handleCheckout = () => {
-    console.log(
-      "GOTO GUEST SHIPPING ADDRESS || Option to choose member or guest checkout"
-    );
+    navigate(`/checkout/guest_shipping_address`);
   };
 
   // fire when continue shopping button clicked
@@ -105,74 +218,84 @@ const CartItemList = () => {
   };
 
   let content;
-  if (cartItems.length > 0) {
-    // calculate total price
-    let totalPrice = 0;
-    cartItems.forEach((item) => {
-      totalPrice += item.book.price * item.quantity;
-    });
-    content = (
-      <Grid container direction="column" spacing={8}>
-        {/* cart items */}
-        {cartItems.map((item, i) => (
-          <Grid item key={i}>
-            <CartItem
-              item={item}
-              onIncrementItemQty={() => handleIncrement(item)}
-              onDecrementItemQty={() => handleDecrement(item)}
-              onRemove={() => handleRemoveCartItems(item)}
-            />
-          </Grid>
-        ))}
-        {/* cart info and action */}
-        <Grid item>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              alignItems: { xs: "center" },
-              justifyContent: { sm: "space-between" },
-            }}
-          >
-            <button
-              style={{
-                backgroundColor: "black",
-                color: "white",
-                padding: "10px 15px",
-              }}
-              onClick={handleContinueShopping}
-            >
-              Continue Shopping
-            </button>
-            <Box sx={{ width: { xs: "80%", sm: "30%" }, textAlign: "center" }}>
-              <hr></hr>
-              <Grid container justifyContent="space-between">
-                <Grid item>
-                  <Typography variant="h6">Total</Typography>
-                </Grid>
-                <Grid item>
-                  <Typography variant="h6">Rp {totalPrice}</Typography>
-                </Grid>
-              </Grid>
-              <button
-                style={{
-                  backgroundColor: "black",
-                  color: "white",
-                  padding: "15px",
-                  width: "100%",
-                  margin: "20px 0",
-                }}
-                onClick={handleCheckout}
-              >
-                CHECKOUT
-              </button>
-            </Box>
-          </Box>
-        </Grid>
-      </Grid>
-    );
+  if (isLoading) {
+    content = <CircularProgress />;
   } else {
-    content = <Typography variant="h6">Cart is Empty</Typography>;
+    if (isFetchError) {
+      content = <Typography variant="h6">Something Error</Typography>;
+    } else {
+      if (cartItems.length > 0) {
+        // calculate total price
+        let totalPrice = 0;
+        cartItems.forEach((item) => {
+          totalPrice += item.book.price * item.quantity;
+        });
+        content = (
+          <Grid container direction="column" spacing={8}>
+            {/* cart items */}
+            {cartItems.map((item, i) => (
+              <Grid item key={i}>
+                <CartItem
+                  item={item}
+                  onIncrementItemQty={() => handleIncrement(item)}
+                  onDecrementItemQty={() => handleDecrement(item)}
+                  onRemove={() => handleRemoveCartItems(item)}
+                />
+              </Grid>
+            ))}
+            {/* cart info and action */}
+            <Grid item>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: { xs: "center" },
+                  justifyContent: { sm: "space-between" },
+                }}
+              >
+                <button
+                  style={{
+                    backgroundColor: "black",
+                    color: "white",
+                    padding: "10px 15px",
+                  }}
+                  onClick={handleContinueShopping}
+                >
+                  Continue Shopping
+                </button>
+                <Box
+                  sx={{ width: { xs: "80%", sm: "30%" }, textAlign: "center" }}
+                >
+                  <hr></hr>
+                  <Grid container justifyContent="space-between">
+                    <Grid item>
+                      <Typography variant="h6">Total</Typography>
+                    </Grid>
+                    <Grid item>
+                      <Typography variant="h6">Rp {totalPrice}</Typography>
+                    </Grid>
+                  </Grid>
+                  <button
+                    style={{
+                      backgroundColor: "black",
+                      color: "white",
+                      padding: "15px",
+                      width: "100%",
+                      margin: "20px 0",
+                    }}
+                    onClick={handleCheckout}
+                  >
+                    CHECKOUT
+                  </button>
+                </Box>
+              </Box>
+            </Grid>
+          </Grid>
+        );
+      } else {
+        content = <Typography variant="h6">Cart is Empty</Typography>;
+      }
+    }
   }
 
   return (

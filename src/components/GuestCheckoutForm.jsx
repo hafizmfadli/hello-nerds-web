@@ -6,6 +6,10 @@ import Typography from "@mui/material/Typography";
 import { useForm } from "react-hook-form";
 import styleCss from "./MemberOrGuest.module.css";
 import axios from "axios";
+import AuthService from "../services/auth.service";
+import CartService from "../services/cart";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 
 const API_URL = process.env.REACT_APP_HELLO_NERDS_API_BASE_URL + "/v1";
 
@@ -21,6 +25,7 @@ const GuestCheckoutForm = () => {
   const [cities, setCitites] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [subDistricts, setSubDistricts] = useState([]);
+  const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     let fetchData = async () => {
@@ -35,9 +40,60 @@ const GuestCheckoutForm = () => {
     fetchData();
   }, []);
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     // make HTTP request to order and shipping address API endpoint
-    console.log(data);
+    if (AuthService.isLoggedIn()) {
+      // fetch cart data from server
+      // ngke deui
+    } else {
+      // guest user
+      // get cart data from local storage
+      console.log("FROM LOCAL STORAGE : ", CartService.items);
+
+      const shippingAddress = {
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        addresses: data.address,
+        postal_code: data.postal_code.toString(),
+        province_id: parseInt(data.province),
+        city_id: parseInt(data.city_kab),
+        district_id: parseInt(data.district),
+        subdistrict_id: parseInt(data.subdistrict),
+        phone: data.phone,
+      };
+
+      let timerInterval;
+      MySwal.fire({
+        icon: "success",
+        title: "Checkout Success",
+        html: 'Yoi will be redirected in <b></b> ',
+        timer: 2000,
+        timerProgressBar: true,
+        didOpen: () => {
+          MySwal.showLoading();
+          const b = MySwal.getHtmlContainer().querySelector("b");
+          timerInterval = setInterval(() => {
+            b.textContent = MySwal.getTimerLeft();
+          }, 100);
+        },
+        willClose: () => {
+          clearInterval(timerInterval)
+          alert('HALO COK')
+        }
+      });
+
+      try {
+        await CartService.guestCheckout(shippingAddress);
+      } catch (err) {
+        console.error(err);
+        MySwal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: err.message,
+        });
+      }
+    }
   };
 
   const handleProvinceSelected = async (e) => {
@@ -50,8 +106,8 @@ const GuestCheckoutForm = () => {
           },
         });
         setCitites(response.data.cities);
-        setDistricts([])
-        setSubDistricts([])
+        setDistricts([]);
+        setSubDistricts([]);
       } catch (err) {
         console.error(err);
       }
@@ -70,7 +126,7 @@ const GuestCheckoutForm = () => {
           },
         });
         setDistricts(response.data.districts);
-        setSubDistricts([])
+        setSubDistricts([]);
       } catch (err) {
         console.error(err);
       }
