@@ -2,9 +2,11 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import Box from "@mui/material/Box";
 import { Link } from "react-router-dom";
-import AuthService from '../services/auth.service'
+import AuthService from "../services/auth.service";
+import CartService from "../services/cart";
 import { useNavigate } from "react-router-dom";
-
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 
 const LoginForm = ({ registerFormUrl }) => {
   const {
@@ -14,12 +16,21 @@ const LoginForm = ({ registerFormUrl }) => {
   } = useForm();
 
   const navigate = useNavigate();
-
+  const MySwal = withReactContent(Swal);
 
   const onSubmit = async (data) => {
     // make HTTP request to login API endpoint
-    let x = await AuthService.login(data.email, data.password)
-    console.log('X :', x)
+    try {
+      await AuthService.login(data.email, data.password);
+      CartService.remove();
+      navigate(`/`);
+    } catch (err) {
+      MySwal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: err.message,
+      });
+    }
   };
 
   return (
