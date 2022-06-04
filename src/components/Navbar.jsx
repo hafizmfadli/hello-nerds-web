@@ -19,10 +19,14 @@ import axios from "axios";
 import { debounce } from "lodash";
 import { API_BASE_URL } from "../helpers";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSelector } from 'react-redux'
-import { selectCart, sumCartQuantity } from '../slices/cartSlice'
-import cartService from '../services/cart'
-
+import { useSelector } from "react-redux";
+import { sumCartQuantity, cartSetup } from "../slices/cartSlice";
+import Menu from "@mui/material/Menu";
+import AuthService from "../services/auth.service";
+import CartService from "../services/cart";
+import { useDispatch } from "react-redux";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -69,7 +73,12 @@ const Navbar = ({ onFilterChanges }) => {
   const searchInputRef = useRef();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const cartQty = useSelector(sumCartQuantity)
+  const cartQty = useSelector(sumCartQuantity);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const isMenuOpen = Boolean(anchorEl);
+  const [user, setUser] = useState(null);
+  const dispatch = useDispatch();
+  const MySwal = withReactContent(Swal);
 
   useEffect(() => {
     // set focus to search box when user clicked
@@ -83,6 +92,17 @@ const Navbar = ({ onFilterChanges }) => {
     // make sure searchbox value is sync with query param
     // bisa pake redux untuk sync anatar query param, navbar searchbox, dan keyword di advance filter
     searchInputRef.current.value = searchParams.get("searchword") || "";
+    if (AuthService.isLoggedIn()) {
+      const token = AuthService.isLoggedIn().authentication_token.token;
+      const userInfo = AuthService.isLoggedIn().user_info;
+      setUser(userInfo);
+      const fetchCart = async () => {
+        // todo: handle error
+        let carts = await CartService.fetch(token, userInfo.id);
+        dispatch(cartSetup(carts));
+      };
+      fetchCart();
+    }
   }, []);
 
   // fire when magnifier button (only show when screen size < md) clicked
@@ -155,7 +175,7 @@ const Navbar = ({ onFilterChanges }) => {
       // navigate to search result page
       let searchword = e.target.value;
       navigate(`/product/search?searchword=${searchword}`);
-      
+
       // update all filter state so SearchResult page can be triggered to make API call
       onFilterChanges(searchword, "", "", "", "");
     }
@@ -164,103 +184,181 @@ const Navbar = ({ onFilterChanges }) => {
   // fired when cart button is clicked
   const handleCartClicked = (e) => {
     navigate(`/checkout/cart`);
-  }
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleProfileMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleLogoout = async () => {
+    try {
+      await AuthService.logout();
+      navigate(`/`);
+    } catch (err) {
+      MySwal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: err.message,
+      });
+    }
+  };
+
+  const handleSignin = () => {
+    navigate(`/account/login`);
+  };
+
+  const handleRegister = () => {
+    navigate(`/account/register`);
+  };
+
+  const menuId = "primary-search-account-menu";
+
+  const renderMenu = (
+    <Menu
+      anchorEl={anchorEl}
+      anchorOrigin={{
+        vertical: "top",
+        horizontal: "right",
+      }}
+      id={menuId}
+      keepMounted
+      transformOrigin={{
+        vertical: "top",
+        horizontal: "right",
+      }}
+      open={isMenuOpen}
+      onClose={handleMenuClose}
+    >
+      {user && (
+        <Box>
+          <MenuItem onClick={handleMenuClose}>
+            Hello, {user.first_name} {user.last_name}!
+          </MenuItem>
+          <MenuItem onClick={handleLogoout}>Logout</MenuItem>
+        </Box>
+      )}
+      {!user && (
+        <Box>
+          <MenuItem onClick={handleSignin}>Sign In</MenuItem>
+          <MenuItem onClick={handleRegister}>Register</MenuItem>
+        </Box>
+      )}
+    </Menu>
+  );
 
   return (
-    <AppBar position="static">
-      <Toolbar>
-        {/* Logo */}
-        <Typography
-          variant="h6"
-          noWrap
-          component="div"
-          sx={{ display: { xs: isSearchBtnClicked ? "none" : "block" } }}
-        >
-          HELLO NERDS
-        </Typography>
-        {/* Search Box */}
-        <Search
-          sx={{
-            display: { xs: isSearchBtnClicked ? "block" : "none", md: "block" },
-          }}
-        >
-          <SearchIconWrapper>
-            <SearchIcon />
-          </SearchIconWrapper>
-          <StyledInputBase
-            placeholder="search..."
-            inputProps={{ "aria-label": "search" }}
-            onBlur={handleSearchBlurred}
-            inputRef={searchInputRef}
-            onChange={debouncedHandleInputChange}
-            onKeyDown={handleEnterInput}
-          />
-
-          {/* Suggestion panel */}
-          {searchResults && searchResults.length > 0 && (
-            <Paper
-              sx={{
-                display: searchResults ? "block" : "none",
-                position: "absolute",
-                width: "100%",
-              }}
-            >
-              <MenuList>
-                {searchResults.map((suggestion, i) => (
-                  <MenuItem key={i}>
-                    <Container
-                      sx={{ display: { xs: "flex" } }}
-                      onClick={() =>
-                        handleSelectSearchSuggestion(suggestion.title)
-                      }
-                    >
-                      <img
-                        src="https://static.periplus.com/nPjyff5ADpJIFw3k1SUY3rk6LAHWjBIIBJOxcucKiAdbZiUA6HeufCI9VBSEevJAw--"
-                        width={80}
-                        height={80}
-                        alt="book cover"
-                      />
-                      <Container
-                        sx={{
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Typography noWrap>{suggestion.title}</Typography>
-                        <Typography noWrap variant="caption">
-                          Author: {suggestion.author}
-                        </Typography>
-                      </Container>
-                    </Container>
-                  </MenuItem>
-                ))}
-              </MenuList>
-            </Paper>
-          )}
-        </Search>
-        <Box sx={{ flexGrow: 1 }} />
-        {/* account and shopping cart button */}
-        <Box sx={{ display: { xs: isSearchBtnClicked ? "none" : "flex" } }}>
-          <IconButton
-            size="large"
-            color="inherit"
-            sx={{ display: { sx: "flex", md: "none" } }}
-            onClick={handleShowSearchInput}
+    <Box>
+      <AppBar position="static">
+        <Toolbar>
+          {/* Logo */}
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{ display: { xs: isSearchBtnClicked ? "none" : "block" } }}
           >
-            <SearchIcon />
-          </IconButton>
-          <IconButton size="large" color="inherit" onClick={handleCartClicked}>
-            <Badge badgeContent={cartQty} color="error">
-              <ShoppingCartIcon />
-            </Badge>
-          </IconButton>
-          <IconButton size="large" color="inherit">
-            <AccountCircleIcon />
-          </IconButton>
-        </Box>
-      </Toolbar>
-    </AppBar>
+            HELLO NERDS
+          </Typography>
+          {/* Search Box */}
+          <Search
+            sx={{
+              display: {
+                xs: isSearchBtnClicked ? "block" : "none",
+                md: "block",
+              },
+            }}
+          >
+            <SearchIconWrapper>
+              <SearchIcon />
+            </SearchIconWrapper>
+            <StyledInputBase
+              placeholder="search..."
+              inputProps={{ "aria-label": "search" }}
+              onBlur={handleSearchBlurred}
+              inputRef={searchInputRef}
+              onChange={debouncedHandleInputChange}
+              onKeyDown={handleEnterInput}
+            />
+
+            {/* Suggestion panel */}
+            {searchResults && searchResults.length > 0 && (
+              <Paper
+                sx={{
+                  display: searchResults ? "block" : "none",
+                  position: "absolute",
+                  width: "100%",
+                }}
+              >
+                <MenuList>
+                  {searchResults.map((suggestion, i) => (
+                    <MenuItem key={i}>
+                      <Container
+                        sx={{ display: { xs: "flex" } }}
+                        onClick={() =>
+                          handleSelectSearchSuggestion(suggestion.title)
+                        }
+                      >
+                        <img
+                          src="https://static.periplus.com/nPjyff5ADpJIFw3k1SUY3rk6LAHWjBIIBJOxcucKiAdbZiUA6HeufCI9VBSEevJAw--"
+                          width={80}
+                          height={80}
+                          alt="book cover"
+                        />
+                        <Container
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Typography noWrap>{suggestion.title}</Typography>
+                          <Typography noWrap variant="caption">
+                            Author: {suggestion.author}
+                          </Typography>
+                        </Container>
+                      </Container>
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Paper>
+            )}
+          </Search>
+          <Box sx={{ flexGrow: 1 }} />
+          {/* account and shopping cart button */}
+          <Box sx={{ display: { xs: isSearchBtnClicked ? "none" : "flex" } }}>
+            <IconButton
+              size="large"
+              color="inherit"
+              sx={{ display: { sx: "flex", md: "none" } }}
+              onClick={handleShowSearchInput}
+            >
+              <SearchIcon />
+            </IconButton>
+            <IconButton
+              size="large"
+              color="inherit"
+              onClick={handleCartClicked}
+            >
+              <Badge badgeContent={cartQty} color="error">
+                <ShoppingCartIcon />
+              </Badge>
+            </IconButton>
+            <IconButton
+              size="large"
+              color="inherit"
+              onClick={handleProfileMenuOpen}
+            >
+              <AccountCircleIcon />
+            </IconButton>
+          </Box>
+        </Toolbar>
+      </AppBar>
+      {renderMenu}
+    </Box>
   );
 };
 
