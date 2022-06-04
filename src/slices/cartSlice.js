@@ -32,13 +32,16 @@ const cartSlice = createSlice({
       if (idx > -1){
         state[idx].quantity = action.payload.quantity
       }
+    },
+    cartSetup(state, action){
+      state.splice(0, state.length, ...action.payload)
     }
   }
 })
 
 // createSlice will provide action creator by default.
 // So we only need to export it.
-export const { bookAdded, bookRemoved, bookSetQty } = cartSlice.actions
+export const { bookAdded, bookRemoved, bookSetQty, cartSetup } = cartSlice.actions
 
 // Selector for extract cart state
 export const selectCart = state => state.cart
