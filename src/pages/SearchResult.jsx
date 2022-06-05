@@ -35,10 +35,11 @@ const SearchResult = () => {
       let extension = searchParams.get("extension") || ""
       let availability = searchParams.get("availability") || ""
       let pageSize = searchParams.get("page_size") || "";
+      let isbn = searchParams.get("isbn") || "";
 
       setCurrentPage(parseInt(page))
       setIsLoading(true)
-      await fetchBooks(searchword, author, extension, availability, pageSize, page);
+      await fetchBooks(searchword, author, extension, availability, pageSize, page, isbn);
       setIsLoading(false)
     };
     fetchData();
@@ -48,11 +49,19 @@ const SearchResult = () => {
     // al those state will be updated using handleFilterChanges() event handler
   }, [currentPage, searchword, author, extension, availability, pageSize]);
 
-  const fetchBooks = async (searchword, author, extension, availability, pageSize, page) => {
+  const fetchBooks = async (searchword, author, extension, availability, pageSize, page, isbn) => {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/v1/books?searchword=${searchword}&author=${author}&extension=${extension}&availability=${availability}&page_size=${pageSize}&page=${page}`
-      );
+      const response = await axios.get(API_BASE_URL + "/v1/books", {
+        params: {
+          searchword,
+          author,
+          extension,
+          availability,
+          page_size: pageSize,
+          page,
+          isbn
+        }
+      })
       setSearchResults(response.data.books);
       setSearchResultsMetadata(response.data.metadata);
     } catch (error) {

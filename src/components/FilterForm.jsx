@@ -5,6 +5,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
+import { validateISBN } from "../helpers";
 
 const FormGroup = styled.div`
   > label {
@@ -31,18 +32,23 @@ const FilterForm = ({ onFilterChanges }) => {
   useEffect(() => {
     // make sure searchbox value is sync with query param
     // bisa pake redux untuk sync anatar query param, navbar searchbox, dan keyword di advance filter
-    setValue("keyword", searchParams.get("searchword") || "");
-  }, []);
+    setValue("keyword", ((searchParams.get("searchword") ? searchParams.get("searchword"): "") + 
+    " " + (searchParams.get("isbn") ? searchParams.get("isbn") : "" ) ).trim() || "" )
+  }, [searchParams]);
 
   const onSubmit = (data) => {
-    let searchword = data.keyword;
     let author = data.author;
     let availability = data.availability;
     let extension = data.extension;
     let pageSize = data.pageSize;
     
+    let tempArr = data.keyword.split(' ');
+    let isbn = tempArr.filter(substring => validateISBN(substring)).reduce((prev, curr) => prev + " " + curr, "").trim()
+    let searchword = tempArr.filter(substring => !validateISBN(substring)).reduce((prev, curr) => prev + " " + curr, "").trim()
+
+
     // when  form submitted, this component only need to navigate with correspond query param
-    navigate(`/product/search?searchword=${searchword}&author=${author}&availability=${availability}&extension=${extension}&page_size=${pageSize}`);
+    navigate(`/product/search?searchword=${searchword}&author=${author}&availability=${availability}&extension=${extension}&page_size=${pageSize}&isbn=${isbn}`);
 
     // update all filter state so SearchResult page can be triggered to make API call
     onFilterChanges(searchword, author, extension, availability, pageSize)
