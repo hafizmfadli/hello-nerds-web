@@ -17,7 +17,7 @@ import Paper from "@mui/material/Paper";
 import MenuList from "@mui/material/MenuList";
 import axios from "axios";
 import { debounce } from "lodash";
-import { API_BASE_URL } from "../helpers";
+import { API_BASE_URL, validateISBN } from "../helpers";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { sumCartQuantity, cartSetup } from "../slices/cartSlice";
@@ -91,7 +91,8 @@ const Navbar = ({ onFilterChanges }) => {
   useEffect(() => {
     // make sure searchbox value is sync with query param
     // bisa pake redux untuk sync anatar query param, navbar searchbox, dan keyword di advance filter
-    searchInputRef.current.value = searchParams.get("searchword") || "";
+    searchInputRef.current.value = ((searchParams.get("searchword") ? searchParams.get("searchword"): "") + 
+    " " + (searchParams.get("isbn") ? searchParams.get("isbn") : "" ) ).trim() || "";
     if (AuthService.isLoggedIn()) {
       const token = AuthService.isLoggedIn().authentication_token.token;
       const userInfo = AuthService.isLoggedIn().user_info;
@@ -103,7 +104,7 @@ const Navbar = ({ onFilterChanges }) => {
       };
       fetchCart();
     }
-  }, []);
+  }, [searchParams]);
 
   // fire when magnifier button (only show when screen size < md) clicked
   const handleShowSearchInput = () => {
@@ -173,8 +174,12 @@ const Navbar = ({ onFilterChanges }) => {
       setSearchResult([]);
 
       // navigate to search result page
-      let searchword = e.target.value;
-      navigate(`/product/search?searchword=${searchword}`);
+      
+      let tempArr = e.target.value.split(' ')
+      let isbn = tempArr.filter(substring => validateISBN(substring)).reduce((prev, curr) => prev + " " + curr, "")
+      let searchword = tempArr.filter(substring => !validateISBN(substring)).reduce((prev, curr) => prev + " " + curr, "")
+      
+      navigate(`/product/search?searchword=${searchword.trim()}&isbn=${isbn.trim()}`);
 
       // update all filter state so SearchResult page can be triggered to make API call
       onFilterChanges(searchword, "", "", "", "");
