@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import Box from "@mui/material/Box";
 import { Link } from "react-router-dom";
 import AuthService from "../services/auth.service";
+import { useNavigate } from "react-router-dom";
 
 const RegisterForm = ({ loginFormUrl }) => {
   const {
@@ -11,6 +12,7 @@ const RegisterForm = ({ loginFormUrl }) => {
     getValues,
     formState: { errors },
   } = useForm();
+  const navigate = useNavigate();
 
   const onSubmit = (data) => {
     // make HTTP request to register API endpoint
@@ -22,6 +24,7 @@ const RegisterForm = ({ loginFormUrl }) => {
       data.password,
       data.passwordConfirmation
     );
+    navigate(`/`);
   };
 
   return (
