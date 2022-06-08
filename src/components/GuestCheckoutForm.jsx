@@ -10,6 +10,10 @@ import AuthService from "../services/auth.service";
 import CartService from "../services/cart";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { cartSetup } from "../slices/cartSlice";
+
 
 const API_URL = process.env.REACT_APP_HELLO_NERDS_API_BASE_URL + "/v1";
 
@@ -26,6 +30,9 @@ const GuestCheckoutForm = () => {
   const [districts, setDistricts] = useState([]);
   const [subDistricts, setSubDistricts] = useState([]);
   const MySwal = withReactContent(Swal);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
 
   useEffect(() => {
     let fetchData = async () => {
@@ -63,28 +70,31 @@ const GuestCheckoutForm = () => {
         phone: data.phone,
       };
 
-      let timerInterval;
-      MySwal.fire({
-        icon: "success",
-        title: "Checkout Success",
-        html: 'Yoi will be redirected in <b></b> ',
-        timer: 2000,
-        timerProgressBar: true,
-        didOpen: () => {
-          MySwal.showLoading();
-          const b = MySwal.getHtmlContainer().querySelector("b");
-          timerInterval = setInterval(() => {
-            b.textContent = MySwal.getTimerLeft();
-          }, 100);
-        },
-        willClose: () => {
-          clearInterval(timerInterval)
-          alert('HALO COK')
-        }
-      });
-
       try {
         await CartService.guestCheckout(shippingAddress);
+        CartService.remove()
+        dispatch(cartSetup([]))
+
+        let timerInterval;
+        MySwal.fire({
+          icon: "success",
+          title: "Checkout Success",
+          html: 'Yoi will be redirected in <b></b> ',
+          timer: 2000,
+          timerProgressBar: true,
+          didOpen: () => {
+            MySwal.showLoading();
+            const b = MySwal.getHtmlContainer().querySelector("b");
+            timerInterval = setInterval(() => {
+              b.textContent = MySwal.getTimerLeft();
+            }, 100);
+          },
+          willClose: () => {
+            clearInterval(timerInterval)
+          }
+        });
+        navigate('/')
+
       } catch (err) {
         console.error(err);
         MySwal.fire({
